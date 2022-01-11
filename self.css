@@ -1,0 +1,45 @@
+.first {
+    background: linear-gradient(to right, #ffffff, rgb(0, 0, 0));
+    text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    position: relative;
+    background-size: 100%;
+    width: auto;
+    height: 800px;
+    border: 2px solid;
+    bottom: 30px;
+    padding: auto;
+}
+
+img {
+    display: inline;
+    width: 250px;
+    height: auto;
+    top: 400px;
+    position: relative;
+}
+
+.second {
+    position: relative;
+    bottom: auto;
+    top: 0%;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    border: 2px whitesmoke;
+    padding: 0% 0% 0% 0%;
+}
+
+body {
+    background: linear-gradient(to right, #ffffff, rgb(0, 0, 0));
+}
+
+img {
+    height: 100px;
+    width: 100px;
+    opacity: 2;
+}
+
+#fi {
+    height: 200px;
+    width: auto;
+    opacity: 0.5;
+}
