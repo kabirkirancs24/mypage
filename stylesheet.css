@@ -1,21 +1,21 @@
 .first {
     background: linear-gradient(to right, #ffffff, rgb(0, 0, 0));
     text-align: center;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-family: 'sacranento', cursive;
     position: relative;
     background-size: 100%;
     width: auto;
     height: 800px;
-    border: 2px solid;
-    bottom: 30px;
+    bottom: 50px;
     padding: auto;
+    margin-top: 50px;
 }
 
 img {
     display: inline;
     width: 250px;
     height: auto;
-    top: 400px;
+    top: 350px;
     position: relative;
 }
 
@@ -29,12 +29,13 @@ img {
 }
 
 body {
-    background: linear-gradient(to right, #ffffff, rgb(0, 0, 0));
+    background: linear-gradient(to right, #ffffff, #8ed5d0);
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 img {
-    height: 100px;
-    width: 100px;
+    height: 200px;
+    width: 200px;
     opacity: 2;
 }
 
@@ -42,4 +43,20 @@ img {
     height: 200px;
     width: auto;
     opacity: 0.5;
+}
+
+#html {
+    font-size: 2rem;
+}
+
+#css {
+    font-size: 2rem;
+}
+
+#bts {
+    font-size: 2rem;
+}
+
+#cpp {
+    font-size: 2rem;
 }
