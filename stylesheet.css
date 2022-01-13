@@ -1,5 +1,10 @@
+.main-conatiner {
+    width: 100%;
+    display: inline;
+}
+
 .first {
-    background: linear-gradient(to right, #ffffff, rgb(0, 0, 0));
+    background: linear-gradient(to right, #ffffff, #2a6a4d);
     text-align: center;
     font-family: 'sacranento', cursive;
     position: relative;
@@ -9,28 +14,33 @@
     bottom: 50px;
     padding: auto;
     margin-top: 50px;
+    width: 100%;
+    height: 100;
+    padding: 0%;
+    margin: 0;
 }
 
 img {
     display: inline;
     width: 250px;
     height: auto;
-    top: 350px;
     position: relative;
+    transition: width 2s, height 2s, transform 2s;
 }
 
-.second {
-    position: relative;
-    bottom: auto;
-    top: 0%;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    border: 2px whitesmoke;
-    padding: 0% 0% 0% 0%;
+img:hover {
+    width: 300px;
+    height: 300px;
+    transform: rotate(180deg);
 }
 
 body {
-    background: linear-gradient(to right, #ffffff, #8ed5d0);
+    background-color: white;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
+    line-height: 2;
+    float: left;
+    margin: 0%;
+    width: 100%;
 }
 
 img {
@@ -39,24 +49,40 @@ img {
     opacity: 2;
 }
 
+.contact {
+    background: linear-gradient(to right, white, #2a6a4d);
+    margin: 0%;
+    position: relative;
+    top: 22px;
+    margin: 0% 0% 0% 0%;
+    width: 100%;
+    height: auto;
+    line-height: 1rem;
+}
+
+hr {
+    border-top: 5px dotted gray;
+    width: 70px;
+    position: relative;
+    left: 500px;
+}
+
+.middle-one {
+    position: relative;
+    float: left;
+    bottom: 300px;
+}
+
+.middle-two {
+    position: relative;
+    float: right;
+    bottom: 200px;
+    right: 80px;
+    font-size: 1em;
+}
+
 #fi {
-    height: 200px;
-    width: auto;
-    opacity: 0.5;
-}
-
-#html {
-    font-size: 2rem;
-}
-
-#css {
-    font-size: 2rem;
-}
-
-#bts {
-    font-size: 2rem;
-}
-
-#cpp {
-    font-size: 2rem;
+    transition: width 2s, height 2s, transform 2s;
+    position: relative;
+    top: 400px;
 }
