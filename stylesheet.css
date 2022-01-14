@@ -4,7 +4,7 @@
 }
 
 .first {
-    background: linear-gradient(to right, #ffffff, #2a6a4d);
+    background: linear-gradient(to right, #f75050, #48c48e);
     text-align: center;
     font-family: 'sacranento', cursive;
     position: relative;
@@ -34,8 +34,13 @@ img:hover {
     transform: rotate(180deg);
 }
 
+#heading:hover {
+    transform: rotate(180deg);
+    transition: width 2s, height 2s, transform 2s;
+}
+
 body {
-    background-color: white;
+    background-color: #ffffff;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     line-height: 2;
     float: left;
@@ -50,34 +55,58 @@ img {
 }
 
 .contact {
-    background: linear-gradient(to right, white, #2a6a4d);
     margin: 0%;
     position: relative;
-    top: 22px;
+    bottom: 10%;
     margin: 0% 0% 0% 0%;
-    width: 100%;
-    height: auto;
+    background-color: #2a6a4d;
     line-height: 1rem;
 }
 
+#lp {
+    text-align: left;
+    padding: 10px;
+}
+
+#wp {
+    text-align: center;
+    position: relative;
+    bottom: 70px;
+    padding: 30px;
+}
+
+h2 {
+    padding-bottom: 20px;
+}
+
+#e {
+    text-align: right;
+    position: relative;
+    bottom: 160px;
+    padding: 30px;
+}
+
 hr {
-    border-top: 5px dotted gray;
+    border-top: dotted rgb(96, 92, 92) 6px;
     width: 70px;
     position: relative;
     left: 500px;
+    margin: 100px auto;
+    opacity: 1;
 }
 
 .middle-one {
     position: relative;
     float: left;
     bottom: 300px;
+    left: 100%;
 }
 
 .middle-two {
     position: relative;
     float: right;
     bottom: 200px;
-    right: 80px;
+    left: 0%;
     font-size: 1em;
 }
 
@@ -85,4 +114,17 @@ hr {
     transition: width 2s, height 2s, transform 2s;
     position: relative;
     top: 400px;
+}
+
+#git {
+    font-size: 2rem;
+    width: 30px;
+}
+
+#ig {
+    position: relative;
+    font-size: 1rem;
+    color: rgb(71, 65, 65);
+    text-align: center;
+    bottom: 15px;
 }
