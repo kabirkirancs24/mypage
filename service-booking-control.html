@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Service & Booking Restriction Control — Jeebly SSP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16305C; --navy-2:#1F3D6E; --pink:#E4145A; --pink-2:#F13A73;
+    --bg:#F3F4F6; --card:#F6F7F8; --card-border:#E4E7EC;
+    --text:#16305C; --muted:#5C6B85; --line:#E4E7EC;
+    --active:#1AA971; --restricted:#E4145A; --scheduled:#D98A1A; --inactive:#8B95A7;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;}
+  body{margin:0; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text);}
+  h1,h2,h3,.brand-word{font-family:'Poppins',sans-serif;}
+
+  /* Header */
+  header.top{background:#fff; border-top:3px solid var(--navy); border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:10px 32px; flex-wrap:wrap; gap:12px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand img{height:46px; display:block;}
+  nav.main{display:flex; gap:26px; flex-wrap:wrap;}
+  nav.main a{color:var(--navy); text-decoration:none; font-size:15px; font-weight:500; opacity:.85;}
+  nav.main a.on{opacity:1; font-weight:600; border-bottom:2px solid var(--pink); padding-bottom:4px;}
+  .avatar{width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--pink),var(--pink-2));
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700;}
+
+  /* Page title band */
+  .titleband{background:#ECEEF1; padding:34px 32px 30px; text-align:center;}
+  .titleband h1{margin:0; font-size:30px; color:var(--navy); font-weight:700;}
+  .titleband p{margin:8px 0 0; color:var(--muted); font-size:14.5px;}
+
+  main{max-width:1180px; margin:0 auto; padding:28px 32px 60px;}
+
+  /* Summary strip */
+  .summary{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;}
+  .stat{background:#fff; border:1px solid var(--card-border); border-radius:10px; padding:16px 18px;}
+  .stat .n{font-size:26px; font-weight:700; color:var(--navy); font-family:'Poppins',sans-serif;}
+  .stat .l{font-size:12.5px; color:var(--muted); margin-top:2px;}
+  .stat.active .n{color:var(--active);}
+  .stat.restricted .n{color:var(--restricted);}
+
+  /* Service cards grid */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:22px;}
+  @media (max-width:840px){ .grid{grid-template-columns:1fr;} nav.main{display:none;} .summary{grid-template-columns:1fr 1fr;} }
+
+  .card{background:var(--card); border:1px solid var(--card-border); border-radius:12px; overflow:hidden; transition:border-color .15s;}
+  .card.restricted{border-color:#F3B8C9;}
+  .card-head{padding:18px 20px 14px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
+  .card-head h3{margin:0; font-size:18px; color:var(--navy);}
+  .card-head .sources-n{font-size:12.5px; color:var(--muted); margin-top:4px;}
+
+  .pill{font-size:11.5px; font-weight:600; padding:4px 11px; border-radius:20px; letter-spacing:.2px; white-space:nowrap;}
+  .pill.active{background:#E4F7EE; color:var(--active);}
+  .pill.restricted{background:#FCE7EE; color:var(--restricted);}
+  .pill.scheduled{background:#FBF0DE; color:var(--scheduled);}
+
+  .card-body{padding:0 20px 18px;}
+  .counts{display:flex; gap:18px; font-size:13px; color:var(--muted); margin-bottom:14px;}
+  .counts b{color:var(--navy);}
+
+  .master-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--line);}
+  .master-label{font-size:13.5px; color:var(--navy); font-weight:500;}
+  .radiogroup{display:flex; gap:18px;}
+  .radiogroup label{display:flex; align-items:center; gap:6px; font-size:13.5px; color:var(--navy); cursor:pointer;}
+  .radiogroup input{accent-color:var(--pink); width:16px; height:16px; cursor:pointer;}
+
+  .restriction-note{background:#FDF1F5; border:1px solid #F6CBDB; border-radius:8px; padding:10px 12px; font-size:12.5px; color:#7A1338; margin:6px 0 14px; line-height:1.5;}
+  .restriction-note b{display:block; font-size:12px; color:var(--restricted); margin-bottom:2px;}
+
+  .card-actions{display:flex; gap:10px; margin-top:4px; flex-wrap:wrap;}
+  button{font-family:'Inter',sans-serif; cursor:pointer;}
+  .btn{border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:600;}
+  .btn-primary{background:var(--navy); color:#fff;}
+  .btn-primary:hover{background:var(--navy-2);}
+  .btn-ghost{background:#fff; color:var(--navy); border:1px solid var(--card-border);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .btn-link{background:none; color:var(--navy); font-size:13px; font-weight:600; padding:6px 0; text-decoration:underline; text-underline-offset:3px;}
+
+  /* Source list (collapsible) */
+  .sources{border-top:1px solid var(--line); margin-top:6px; display:none;}
+  .sources.open{display:block;}
+  .source-row{display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px dashed var(--line); font-size:13px; gap:14px;}
+  .source-row:last-child{border-bottom:none;}
+  .source-name{color:var(--navy); font-weight:500; min-width:180px;}
+  .source-right{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px;}
+  .dot.active{background:var(--active);} .dot.restricted{background:var(--restricted);}
+  .mini-btn{background:#fff; border:1px solid var(--card-border); border-radius:7px; padding:5px 10px; font-size:12px; color:var(--navy);}
+  .mini-btn:hover{border-color:var(--navy);}
+  .source-exception-btn{background:#fff; border:1px solid var(--card-border); border-radius:7px; padding:5px 10px; font-size:12px; color:var(--navy); white-space:nowrap;}
+  .source-exception-btn:hover{border-color:var(--navy); background:#F8FAFD;}
+  .source-exception-btn.has-exceptions{border-color:#B9CBE5; background:#F3F6FB; font-weight:600;}
+  .source-client-summary{font-size:11px; color:var(--muted); max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .kebab{background:none; border:none; color:var(--muted); font-size:16px; padding:2px 6px; line-height:1;}
+
+  .source-exception-list{margin:4px 0 14px;}
+  .source-exception-empty{font-size:12.5px; color:var(--muted); margin:4px 0 12px;}
+  .source-exception-help{background:#F3F6FB; border:1px solid #DCE4F0; border-radius:9px; padding:10px 12px; margin-bottom:14px; font-size:12px; color:var(--muted); line-height:1.5;}
+  .client-count{font-size:11px; font-weight:700; color:var(--navy); background:#EEF1F6; border-radius:10px; padding:2px 7px; margin-left:5px;}
+
+  /* Scheduled service cutoff controls */
+  .cutoff-panel{background:#fff; border:1px solid var(--card-border); border-radius:10px; padding:13px 14px; margin:14px 0 4px;}
+  .cutoff-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .cutoff-title{font-size:13.5px; font-weight:700; color:var(--navy);}
+  .cutoff-sub{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .cutoff-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .cutoff-item{background:#F7F8FA; border:1px solid var(--card-border); border-radius:8px; padding:10px 11px;}
+  .cutoff-item .type{font-size:11.5px; font-weight:700; color:var(--muted);}
+  .cutoff-item .time{font-family:'Poppins',sans-serif; font-size:16px; font-weight:700; color:var(--navy); margin-top:2px;}
+  .cutoff-item .state{font-size:10.5px; color:var(--active); margin-top:2px;}
+  .cutoff-edit{background:#fff; border:1px solid var(--card-border); border-radius:7px; padding:5px 9px; font-size:11.5px; font-weight:600; color:var(--navy);}
+  .cutoff-edit:hover{border-color:var(--navy);}
+  .cutoff-form{display:grid; gap:14px;}
+  .cutoff-rule{border:1px solid var(--card-border); border-radius:10px; padding:13px 14px; background:#F8FAFC;}
+  .cutoff-rule-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:11px;}
+  .cutoff-rule-name{font-size:13.5px; font-weight:700; color:var(--navy);}
+  .cutoff-rule-desc{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .cutoff-client-section{margin-top:12px; padding-top:11px; border-top:1px dashed var(--card-border);}
+  .cutoff-client-label{font-size:12.5px; font-weight:700; color:var(--navy); margin-bottom:4px;}
+  .cutoff-client-help{font-size:11.5px; color:var(--muted); line-height:1.45; margin-bottom:8px;}
+  .cutoff-client-list{min-height:0;}
+  .cutoff-client-empty{font-size:11.5px; color:var(--muted); margin:4px 0 8px;}
+  .cutoff-client-input{display:flex; gap:8px; margin-top:7px;}
+  .cutoff-client-input input{flex:1; min-width:0; border:1px solid var(--card-border); border-radius:8px; padding:8px 9px; font-size:12.5px; font-family:'Inter',sans-serif; color:var(--text);}
+  .cutoff-client-input button{padding:8px 12px; font-size:12px;}
+  .switch{position:relative; width:38px; height:21px; flex:0 0 auto;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; inset:0; cursor:pointer; background:#C9D0DB; border-radius:20px; transition:.15s;}
+  .slider:before{content:''; position:absolute; width:17px; height:17px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; box-shadow:0 1px 2px rgba(0,0,0,.12);}
+  .switch input:checked + .slider{background:var(--active);}
+  .switch input:checked + .slider:before{transform:translateX(17px);}
+  @media (max-width:560px){ .cutoff-grid{grid-template-columns:1fr;} }
+
+  footer{background:var(--navy); color:#EAF0FA; text-align:center; padding:20px; font-size:13px; margin-top:10px;}
+
+  /* Modal */
+  .overlay{position:fixed; inset:0; background:rgba(22,48,92,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
+  .overlay.open{display:flex;}
+  .modal{background:#fff; border-radius:14px; width:100%; max-width:520px; max-height:90vh; overflow:auto; padding:26px 26px 22px;}
+  .modal h2{margin:0 0 4px; font-size:19px; color:var(--navy);}
+  .modal .sub{font-size:13px; color:var(--muted); margin:0 0 18px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;}
+  .field label{display:block; font-size:12.5px; color:var(--navy); font-weight:600; margin-bottom:6px;}
+  .field input, .field textarea{width:100%; border:1px solid var(--card-border); border-radius:8px; padding:9px 10px; font-size:13.5px; font-family:'Inter',sans-serif; color:var(--text);}
+  .field textarea{resize:vertical; min-height:70px;}
+  .tz-note{font-size:11.5px; color:var(--muted); margin:-8px 0 16px;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; margin-top:8px;}
+  .display-opt{background:#F3F6FB; border:1px solid #DCE4F0; border-radius:10px; padding:13px 14px; margin:4px 0 18px;}
+  .display-opt .opt-row{display:flex; align-items:flex-start; gap:10px;}
+  .display-opt input[type=checkbox]{width:17px; height:17px; margin-top:2px; accent-color:var(--pink); cursor:pointer; flex:0 0 auto;}
+  .display-opt label{font-size:13.5px; color:var(--navy); font-weight:600; cursor:pointer;}
+  .display-opt .opt-sub{font-size:12px; color:var(--muted); margin:3px 0 0 27px; line-height:1.5;}
+  .badge-inline{display:inline-block; font-size:10.5px; font-weight:700; color:#2B5EA7; background:#E5EEFA; border-radius:5px; padding:2px 7px; margin-left:8px; vertical-align:1px;}
+  .close-x{position:absolute; top:16px; right:20px; background:none; border:none; font-size:18px; color:var(--muted);}
+  .modal{position:relative;}
+
+  .chip{display:inline-flex; align-items:center; gap:6px; background:#EEF1F6; border:1px solid var(--card-border);
+    border-radius:20px; padding:5px 6px 5px 12px; font-size:12.5px; color:var(--navy); margin:0 6px 8px 0;}
+  .chip button{background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; line-height:1; padding:2px 4px;}
+  .chip button:hover{color:var(--restricted);}
+  .exception-input-row{display:flex; gap:8px; margin-top:2px;}
+  .exception-input-row input{flex:1; border:1px solid var(--card-border); border-radius:8px; padding:9px 10px; font-size:13.5px; font-family:'Inter',sans-serif; color:var(--text);}
+  .exception-note{font-size:12px; color:var(--muted); margin:0 0 14px; line-height:1.5;}
+  .exception-badge{background:#E8F5EC; color:var(--active);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <img src="data:image/png;base64,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" alt="Jeebly">
+  </div>
+  <nav class="main">
+    <a href="#">Dashboard</a><a href="#">Clients</a><a href="#">Orders</a><a href="#">Trans.</a>
+    <a href="#">PG Trans.</a><a href="#">Sales</a><a class="on" href="#">Settings</a>
+    <a href="#">Finance</a><a href="#">Reports</a><a href="#">M. Settings</a><a href="#">M. Vendors</a>
+  </nav>
+  <div class="avatar">AK</div>
+</header>
+
+<div class="titleband">
+  <h1>Service & Booking Restriction Control</h1>
+  <p>Temporarily restrict and auto-resume bookings by service or booking source · Times shown in GST (UTC+4)</p>
+</div>
+
+<main>
+  <div class="summary">
+    <div class="stat"><div class="n">4</div><div class="l">Services</div></div>
+    <div class="stat"><div class="n" id="sumTotal">15</div><div class="l">Total Sources</div></div>
+    <div class="stat active"><div class="n" id="sumActive">13</div><div class="l">Active Sources</div></div>
+    <div class="stat restricted"><div class="n" id="sumRestricted">2</div><div class="l">Restricted Sources</div></div>
+  </div>
+
+  <div class="grid" id="cardGrid"></div>
+</main>
+
+<footer>All rights reserved. © 2026 Jeebly LLC.</footer>
+
+<div class="overlay" id="cutoffOverlay">
+  <div class="modal" style="max-width:520px;">
+    <button class="close-x" onclick="closeCutoffModal()">✕</button>
+    <h2>Scheduled Booking Cutoffs</h2>
+    <p class="sub">Manage SDD and NDD cutoff times for the Scheduled Service. All times are in GST (UTC+4).</p>
+    <div class="cutoff-form">
+      <div class="cutoff-rule">
+        <div class="cutoff-rule-head">
+          <div>
+            <div class="cutoff-rule-name">Same Day Delivery (SDD)</div>
+            <div class="cutoff-rule-desc">Orders must be created on or before the configured cutoff.</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="sddEnabled"><span class="slider"></span></label>
+        </div>
+        <div class="field"><label for="sddCutoff">Cutoff Time</label><input type="time" id="sddCutoff"></div>
+        <div class="cutoff-client-section">
+          <div class="cutoff-client-label">Unrestricted Clients <span style="font-weight:400; color:var(--muted);">(optional)</span></div>
+          <div class="cutoff-client-help">These clients can continue creating SDD orders after the configured cutoff time.</div>
+          <div id="sddUnrestrictedList" class="cutoff-client-list"></div>
+          <div class="cutoff-client-input">
+            <input type="text" id="sddUnrestrictedInput" placeholder="Client name or ID" onkeydown="if(event.key==='Enter'){event.preventDefault();addCutoffClient('sdd');}">
+            <button class="btn btn-ghost" type="button" onclick="addCutoffClient('sdd')">Add</button>
+          </div>
+        </div>
+      </div>
+      <div class="cutoff-rule">
+        <div class="cutoff-rule-head">
+          <div>
+            <div class="cutoff-rule-name">Next Day Delivery (NDD)</div>
+            <div class="cutoff-rule-desc">Orders must be created on or before the configured cutoff.</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="nddEnabled"><span class="slider"></span></label>
+        </div>
+        <div class="field"><label for="nddCutoff">Cutoff Time</label><input type="time" id="nddCutoff"></div>
+        <div class="cutoff-client-section">
+          <div class="cutoff-client-label">Unrestricted Clients <span style="font-weight:400; color:var(--muted);">(optional)</span></div>
+          <div class="cutoff-client-help">These clients can continue creating NDD orders after the configured cutoff time.</div>
+          <div id="nddUnrestrictedList" class="cutoff-client-list"></div>
+          <div class="cutoff-client-input">
+            <input type="text" id="nddUnrestrictedInput" placeholder="Client name or ID" onkeydown="if(event.key==='Enter'){event.preventDefault();addCutoffClient('ndd');}">
+            <button class="btn btn-ghost" type="button" onclick="addCutoffClient('ndd')">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="tz-note" style="margin-top:14px;">These cutoff controls apply only to Scheduled Service and do not change service/source restriction settings.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeCutoffModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCutoffs()">Save Cutoffs</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="modal" style="max-width:380px;">
+    <h2 style="margin-bottom:6px;">Resume Service?</h2>
+    <p class="sub" style="margin:0 0 20px;">Activate service and dismiss current restriction?</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="confirmNo()">No</button>
+      <button class="btn btn-primary" onclick="confirmYes()">Yes</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="sourceExceptionsOverlay">
+  <div class="modal" style="max-width:500px;">
+    <button class="close-x" onclick="closeSourceExceptions()">✕</button>
+    <h2>Restricted Clients</h2>
+    <p class="sub" id="sourceExceptionsSub">Source level · Scheduled Service → SSP – Book Now</p>
+    <div class="source-exception-help">
+      The clients listed below are restricted for <b id="sourceExceptionSourceLabel">this source</b>.
+      They cannot create bookings through this source while the source restriction is active.
+      These restrictions are source-specific and do not affect other booking sources.
+    </div>
+    <div id="sourceExceptionsList" class="source-exception-list"></div>
+    <div class="exception-input-row">
+      <input type="text" id="sourceExceptionInput" placeholder="Client name or ID"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();addSourceException();}">
+      <button class="btn btn-primary" onclick="addSourceException()">Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeSourceExceptions()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="exceptionsOverlay">
+  <div class="modal" style="max-width:440px;">
+    <button class="close-x" onclick="closeExceptions()">✕</button>
+    <h2>Client Exceptions</h2>
+    <p class="sub" id="exceptionsSub">Master level · Scheduled Service</p>
+    <p class="exception-note">These clients can keep booking through <b>any</b> source on this service even while a master restriction is active. They're unaffected when the service is fully open.</p>
+    <div id="exceptionsList"></div>
+    <div class="exception-input-row">
+      <input type="text" id="exceptionInput" placeholder="Client name or ID" onkeydown="if(event.key==='Enter'){event.preventDefault();addException();}">
+      <button class="btn btn-primary" onclick="addException()">Add</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeExceptions()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close-x" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">Configure Restriction</h2>
+    <p class="sub" id="modalSub">Master level · Scheduled Service</p>
+    <div class="field-row">
+      <div class="field"><label>Start Date</label><input type="date" id="startDate"></div>
+      <div class="field"><label>Start Time</label><input type="time" id="startTime"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>End Date</label><input type="date" id="endDate"></div>
+      <div class="field"><label>End Time</label><input type="time" id="endTime"></div>
+    </div>
+    <p class="tz-note">All date &amp; time values are in GST (UTC+4). End must be later than start.</p>
+    <div class="field">
+      <label>Customer Message</label>
+      <textarea id="custMsg" placeholder="e.g. Scheduled bookings are temporarily unavailable due to system maintenance. Please try again after 06:00 PM GST.">Scheduled bookings are temporarily unavailable due to system maintenance. Please try again after 06:00 PM GST.</textarea>
+    </div>
+    <div class="display-opt">
+      <div class="opt-row">
+        <input type="checkbox" id="showInPortal" checked>
+        <label for="showInPortal">Also show this message on the booking form<span class="badge-inline">SSP User Portal</span></label>
+      </div>
+      <p class="opt-sub">In addition to blocking the booking, this message appears inline on the booking form at the moment the user selects a restricted date, time or source — available for all four services.</p>
+    </div>
+    <div class="display-opt" id="masterExceptionsSection">
+      <label style="display:block; font-size:13.5px; color:var(--navy); font-weight:600;">Client Exceptions <span style="font-weight:400; color:var(--muted);">(optional)</span></label>
+      <p class="opt-sub" style="margin:4px 0 10px 0;">These clients can keep booking through any source on this service even while this restriction is active.</p>
+      <div id="modalExceptionsList"></div>
+      <div class="exception-input-row">
+        <input type="text" id="modalExceptionInput" placeholder="Client name or ID" onkeydown="if(event.key==='Enter'){event.preventDefault();addModalException();}">
+        <button class="btn btn-ghost" type="button" onclick="addModalException()">Add</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRestriction()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  { id:'sched', name:'Scheduled Service', restricted:false,
+    cutoffs:{sdd:{enabled:true,time:'11:00',unrestrictedClients:[]}, ndd:{enabled:true,time:'16:00',unrestrictedClients:[]}},
+    sources:['SSP – Book Now','SSP – Bulk Upload','Fulfilled by Client','Fulfilled by Jeebly','API','Desktop App','Mobile App – Jeebly One','Shopify','WooCommerce','Magento'],
+    restrictedSources:['API'], exceptions:[], sourceExceptions:{
+      'API':['Al Futtaim Logistics','Careem Business'],
+      'Shopify':[], 'SSP – Book Now':[]
+    } },
+  { id:'express', name:'Express', restricted:false,
+    sources:['SSP – Book Now','Express API','Mobile App – Jeebly One'], restrictedSources:[], exceptions:[], sourceExceptions:{
+      'SSP – Book Now':[], 'Express API':[], 'Mobile App – Jeebly One':[]
+    } },
+  { id:'moveo', name:'Moveo', restricted:true,
+    sources:['SSP User Portal','Mobile App – Jeebly One'], restrictedSources:['SSP User Portal','Mobile App – Jeebly One'],
+    end:'25 Sep 2026, 06:00 PM GST', msg:'Moveo bookings are paused for fleet reassignment. Back shortly.',
+    exceptions:['Al Futtaim Logistics','Careem Business'], sourceExceptions:{
+      'SSP User Portal':['Al Futtaim Logistics','Careem Business'],
+      'Mobile App – Jeebly One':['Al Futtaim Logistics']
+    } },
+  { id:'intl', name:'International Orders', restricted:false,
+    sources:['Mobile App – Jeebly One','SSP User Portal'], restrictedSources:[], exceptions:[] },
+];
+// Ensure every booking source always has its own independent restricted-client list.
+DATA.forEach(svc => {
+  if(!svc.sourceExceptions) svc.sourceExceptions = {};
+  svc.sources.forEach(source => {
+    if(!Array.isArray(svc.sourceExceptions[source])) svc.sourceExceptions[source] = [];
+  });
+});
+
+function pillFor(restricted){ return restricted ? '<span class="pill restricted">Restricted</span>' : '<span class="pill active">Active</span>'; }
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[ch]));
+}
+
+function sourceKey(sourceName){
+  return String(sourceName);
+}
+
+function getSourceExceptions(svc, sourceName){
+  if(!svc.sourceExceptions) svc.sourceExceptions = {};
+  const key = sourceKey(sourceName);
+  if(!Array.isArray(svc.sourceExceptions[key])) svc.sourceExceptions[key] = [];
+  return svc.sourceExceptions[key];
+}
+
+function renderCard(svc){
+  const total = svc.sources.length;
+  const restrictedCount = svc.restrictedSources.length;
+  const activeCount = total - restrictedCount;
+
+  const sourcesHtml = svc.sources.map((s,i)=>{
+    const isR = svc.restrictedSources.includes(s);
+    const rowId = `src-${svc.id}-${i}`;
+    const sourceExceptions = getSourceExceptions(svc, s);
+    const exceptionCount = sourceExceptions.length;
+    const exceptionLabel = exceptionCount
+      ? `Client Exceptions <span class="client-count">${exceptionCount}</span>`
+      : 'Client Exceptions';
+
+    return `<div class="source-row">
+      <span class="source-name"><span class="dot ${isR?'restricted':'active'}"></span>${escapeHtml(s)}</span>
+      <span class="source-right">
+        <span style="color:var(--muted); font-size:12px;">${isR?'Restricted':'Active'}</span>
+        <button class="mini-btn" id="${rowId}" data-svc="${escapeHtml(svc.id)}" data-src="${escapeHtml(s)}" data-action="${isR?'resume':'restrict'}">${isR?'Resume':'Restrict'}</button>
+        <button class="source-exception-btn ${exceptionCount?'has-exceptions':''}"
+          onclick="openSourceExceptions('${svc.id}', '${String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')"
+          title="Manage clients restricted for this source">${exceptionLabel}</button>
+        <button class="kebab" title="More">⋯</button>
+      </span>
+    </div>`;
+  }).join('');
+
+  const portalTag = svc.showInPortal!==false ? ' <span class="badge-inline">Also on SSP User Portal booking form</span>' : '';
+  const exceptionTag = svc.exceptions.length>0 ? ` <span class="badge-inline exception-badge">${svc.exceptions.length} client${svc.exceptions.length>1?'s':''} exempt</span>` : '';
+  const note = svc.restricted ? `<div class="restriction-note"><b>Active restriction</b>Resumes automatically ${escapeHtml(svc.end || 'the configured end time')}. Message: “${escapeHtml(svc.msg || '')}”${portalTag}${exceptionTag}</div>` : '';
+
+  return `<div class="card ${svc.restricted?'restricted':''}" id="card-${escapeHtml(svc.id)}">
+    <div class="card-head">
+      <div>
+        <h3>${escapeHtml(svc.name)}</h3>
+        <div class="sources-n">${total} booking sources</div>
+      </div>
+      ${pillFor(svc.restricted)}
+    </div>
+    <div class="card-body">
+      <div class="counts"><span><b>${activeCount}</b> Active</span><span><b>${restrictedCount}</b> Restricted</span></div>
+      ${note}
+      <div class="master-row">
+        <span class="master-label">Master Control</span>
+        <div class="radiogroup">
+          <label><input type="radio" name="m-${escapeHtml(svc.id)}" ${!svc.restricted?'checked':''} onchange="toggleMaster('${escapeHtml(svc.id)}',false)">On</label>
+          <label><input type="radio" name="m-${escapeHtml(svc.id)}" ${svc.restricted?'checked':''} onchange="toggleMaster('${escapeHtml(svc.id)}',true)">Off</label>
+        </div>
+      </div>
+
+      ${svc.id==='sched' ? `
+      <div class="cutoff-panel">
+        <div class="cutoff-head">
+          <div>
+            <div class="cutoff-title">Scheduled Booking Cutoffs</div>
+            <div class="cutoff-sub">Cutoff times are managed in GST (UTC+4).</div>
+          </div>
+          <button class="cutoff-edit" onclick="openCutoffModal()">Manage</button>
+        </div>
+        <div class="cutoff-grid">
+          <div class="cutoff-item">
+            <div class="type">SDD · Same Day Delivery</div>
+            <div class="time">${svc.cutoffs?.sdd?.time || '11:00'} GST</div>
+            <div class="state">${svc.cutoffs?.sdd?.enabled === false ? 'Disabled' : 'Active'}</div>
+          </div>
+          <div class="cutoff-item">
+            <div class="type">NDD · Next Day Delivery</div>
+            <div class="time">${svc.cutoffs?.ndd?.time || '16:00'} GST</div>
+            <div class="state">${svc.cutoffs?.ndd?.enabled === false ? 'Disabled' : 'Active'}</div>
+          </div>
+        </div>
+      </div>` : ''}
+
+      <div class="card-actions">
+        <button class="btn btn-primary" onclick="openModal('${escapeHtml(svc.id)}')">Configure Restriction</button>
+        <button class="btn btn-ghost" onclick="toggleSources('${escapeHtml(svc.id)}')">Manage Sources</button>
+        <button class="btn btn-ghost" onclick="openExceptions('${escapeHtml(svc.id)}')">Client Exceptions${svc.exceptions.length?` (${svc.exceptions.length})`:''}</button>
+      </div>
+      <div class="sources" id="sources-${escapeHtml(svc.id)}">${sourcesHtml}</div>
+    </div>
+  </div>`;
+}
+
+function render(){
+  document.getElementById('cardGrid').innerHTML = DATA.map(renderCard).join('');
+  const totalActive = DATA.reduce((a,s)=>a+(s.sources.length-s.restrictedSources.length),0);
+  const totalRestricted = DATA.reduce((a,s)=>a+s.restrictedSources.length,0);
+  document.getElementById('sumActive').textContent = totalActive;
+  document.getElementById('sumRestricted').textContent = totalRestricted;
+  document.getElementById('sumTotal').textContent = totalActive + totalRestricted;
+
+  document.getElementById('cardGrid').querySelectorAll('.mini-btn[data-action]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const svcId = btn.dataset.svc, src = btn.dataset.src;
+      if(btn.dataset.action === 'resume') confirmResume(svcId, src, false);
+      else openModal(svcId, src);
+    };
+  });
+}
+
+function toggleSources(id){
+  document.getElementById('sources-'+id).classList.toggle('open');
+}
+
+function toggleMaster(id, restrict){
+  if(restrict){
+    // Turning master control Off opens the full Configure Restriction
+    // dialog (dates/times/message) instead of restricting silently.
+    openModal(id, null, true);
+  } else {
+    // Turning master control On (resuming) asks for a single Yes/No
+    // confirmation before dismissing the restriction.
+    confirmResume(id, null, true);
+  }
+}
+
+let pendingConfirm = null;
+function confirmResume(svcId, sourceName, isMasterToggle){
+  pendingConfirm = { svcId, sourceName, isMasterToggle: !!isMasterToggle };
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function confirmNo(){
+  document.getElementById('confirmOverlay').classList.remove('open');
+  const wasMasterToggle = pendingConfirm && pendingConfirm.isMasterToggle;
+  pendingConfirm = null;
+  if(wasMasterToggle) render(); // put the radio back where it was
+}
+function confirmYes(){
+  if(!pendingConfirm) return;
+  const svc = DATA.find(s=>s.id===pendingConfirm.svcId);
+  if(pendingConfirm.sourceName){
+    const idx = svc.restrictedSources.indexOf(pendingConfirm.sourceName);
+    if(idx!==-1) svc.restrictedSources.splice(idx,1);
+    svc.restricted = svc.restrictedSources.length === svc.sources.length;
+  } else {
+    svc.restricted = false;
+    svc.restrictedSources = [];
+  }
+  document.getElementById('confirmOverlay').classList.remove('open');
+  pendingConfirm = null;
+  render();
+}
+
+function fmtDT(dateStr, timeStr){
+  if(!dateStr || !timeStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  const dt = new Date(`${dateStr}T${timeStr}`);
+  if(isNaN(dt)) return '';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let h = dt.getHours(); const mins = String(dt.getMinutes()).padStart(2,'0');
+  const ampm = h>=12?'PM':'AM'; h = h%12; if(h===0) h=12;
+  return `${d} ${months[dt.getMonth()]} ${y}, ${String(h).padStart(2,'0')}:${mins} ${ampm} GST`;
+}
+
+function getSvc(id){ return DATA.find(s=>s.id===id); }
+
+function renderExceptionChipsInto(svcId, listElId){
+  const svc = getSvc(svcId);
+  const wrap = document.getElementById(listElId);
+  if(!svc.exceptions.length){
+    wrap.innerHTML = '<p style="font-size:12.5px; color:var(--muted); margin:4px 0 12px;">No exempt clients yet — add one below.</p>';
+    return;
+  }
+  wrap.innerHTML = `<div style="margin:4px 0 12px;">${svc.exceptions.map((c,i)=>
+    `<span class="chip">${c}<button onclick="removeExceptionFrom('${svcId}',${i},'${listElId}')" title="Remove">&times;</button></span>`).join('')}</div>`;
+}
+function addExceptionTo(svcId, inputElId, listElId){
+  const svc = getSvc(svcId);
+  const input = document.getElementById(inputElId);
+  const val = input.value.trim();
+  if(!val) return;
+  if(!svc.exceptions.includes(val)) svc.exceptions.push(val);
+  input.value = '';
+  renderExceptionChipsInto(svcId, listElId);
+}
+function removeExceptionFrom(svcId, i, listElId){
+  const svc = getSvc(svcId);
+  svc.exceptions.splice(i,1);
+  renderExceptionChipsInto(svcId, listElId);
+}
+
+
+// Source-level Restricted Clients dialog.
+// Each source maintains its own independent client list.
+let sourceExceptionsCtx = null;
+
+function renderSourceExceptionList(){
+  if(!sourceExceptionsCtx) return;
+  const {svcId, sourceName} = sourceExceptionsCtx;
+  const svc = getSvc(svcId);
+  const list = getSourceExceptions(svc, sourceName);
+  const wrap = document.getElementById('sourceExceptionsList');
+
+  if(!list.length){
+    wrap.innerHTML = '<p class="source-exception-empty">No restricted clients configured for this source — add one below.</p>';
+    return;
+  }
+
+  wrap.innerHTML = `<div>${list.map((client, index) =>
+    `<span class="chip">${escapeHtml(client)}
+      <button onclick="removeSourceException(${index})" title="Remove">&times;</button>
+    </span>`
+  ).join('')}</div>`;
+}
+
+function openSourceExceptions(svcId, sourceName){
+  sourceExceptionsCtx = {svcId, sourceName};
+  const svc = getSvc(svcId);
+
+  document.getElementById('sourceExceptionsSub').textContent =
+    `Source level · ${svc.name} → ${sourceName}`;
+  document.getElementById('sourceExceptionSourceLabel').textContent = sourceName;
+  document.getElementById('sourceExceptionInput').value = '';
+
+  renderSourceExceptionList();
+  document.getElementById('sourceExceptionsOverlay').classList.add('open');
+}
+
+function addSourceException(){
+  if(!sourceExceptionsCtx) return;
+
+  const input = document.getElementById('sourceExceptionInput');
+  const val = input.value.trim();
+  if(!val) return;
+
+  const svc = getSvc(sourceExceptionsCtx.svcId);
+  const list = getSourceExceptions(svc, sourceExceptionsCtx.sourceName);
+
+  if(!list.includes(val)) list.push(val);
+
+  input.value = '';
+  renderSourceExceptionList();
+  render();
+  document.getElementById('sourceExceptionsOverlay').classList.add('open');
+}
+
+function removeSourceException(index){
+  if(!sourceExceptionsCtx) return;
+
+  const svc = getSvc(sourceExceptionsCtx.svcId);
+  const list = getSourceExceptions(svc, sourceExceptionsCtx.sourceName);
+
+  if(index >= 0 && index < list.length) list.splice(index,1);
+
+  renderSourceExceptionList();
+  render();
+  document.getElementById('sourceExceptionsOverlay').classList.add('open');
+}
+
+function closeSourceExceptions(){
+  document.getElementById('sourceExceptionsOverlay').classList.remove('open');
+  sourceExceptionsCtx = null;
+  render();
+}
+
+// Standalone "Client Exceptions" dialog (accessible directly from the card)
+let exceptionsCtx = null;
+function openExceptions(svcId){
+  exceptionsCtx = svcId;
+  const svc = getSvc(svcId);
+  document.getElementById('exceptionsSub').textContent = `Applies to all sources · ${svc.name}`;
+  document.getElementById('exceptionInput').value = '';
+  renderExceptionChipsInto(svcId, 'exceptionsList');
+  document.getElementById('exceptionsOverlay').classList.add('open');
+}
+function addException(){ if(exceptionsCtx) addExceptionTo(exceptionsCtx, 'exceptionInput', 'exceptionsList'); }
+function closeExceptions(){
+  document.getElementById('exceptionsOverlay').classList.remove('open');
+  exceptionsCtx = null;
+  render();
+}
+
+// Client Exceptions section embedded in the master-level Configure Restriction modal
+function renderSourceExceptionsIntoModal(svcId, sourceName){
+  const svc = getSvc(svcId);
+  const list = getSourceExceptions(svc, sourceName);
+  const wrap = document.getElementById('modalExceptionsList');
+
+  if(!list.length){
+    wrap.innerHTML = '<p style="font-size:12.5px; color:var(--muted); margin:4px 0 12px;">No restricted clients yet — add one below.</p>';
+    return;
+  }
+
+  wrap.innerHTML = `<div style="margin:4px 0 12px;">${list.map((c,i)=>
+    `<span class="chip">${escapeHtml(c)}<button onclick="removeSourceExceptionFromModal(${i})" title="Remove">&times;</button></span>`
+  ).join('')}</div>`;
+}
+
+function addModalException(){
+  if(!modalCtx) return;
+
+  const input = document.getElementById('modalExceptionInput');
+  const val = input.value.trim();
+  if(!val) return;
+
+  const svc = getSvc(modalCtx.svcId);
+
+  if(modalCtx.sourceName){
+    const list = getSourceExceptions(svc, modalCtx.sourceName);
+    if(!list.includes(val)) list.push(val);
+    renderSourceExceptionsIntoModal(modalCtx.svcId, modalCtx.sourceName);
+  } else {
+    addExceptionTo(modalCtx.svcId, 'modalExceptionInput', 'modalExceptionsList');
+  }
+
+  input.value = '';
+}
+
+function removeSourceExceptionFromModal(index){
+  if(!modalCtx || !modalCtx.sourceName) return;
+  const svc = getSvc(modalCtx.svcId);
+  const list = getSourceExceptions(svc, modalCtx.sourceName);
+  if(index >= 0 && index < list.length) list.splice(index,1);
+  renderSourceExceptionsIntoModal(modalCtx.svcId, modalCtx.sourceName);
+}
+
+let modalCtx = null;
+function openModal(svcId, sourceName, fromMasterToggle){
+  modalCtx = { svcId, sourceName, fromMasterToggle: !!fromMasterToggle };
+  const svc = DATA.find(s=>s.id===svcId);
+  document.getElementById('modalSub').textContent = sourceName ? `Source level · ${svc.name} → ${sourceName}` : `Master level · ${svc.name}`;
+  document.getElementById('startDate').value = svc.startDate || '';
+  document.getElementById('startTime').value = svc.startTime || '';
+  document.getElementById('endDate').value = svc.endDate || '';
+  document.getElementById('endTime').value = svc.endTime || '';
+  document.getElementById('custMsg').value = svc.msg || 'Bookings are temporarily unavailable due to system maintenance.';
+  document.getElementById('showInPortal').checked = svc.showInPortal !== false;
+  const excSection = document.getElementById('masterExceptionsSection');
+  if(sourceName){
+    excSection.style.display = '';
+    excSection.querySelector('label').innerHTML = 'Restricted Clients <span style="font-weight:400; color:var(--muted);">(source specific)</span>';
+    excSection.querySelector('.opt-sub').textContent = 'These clients are restricted for this booking source only. Other sources are unaffected.';
+    document.getElementById('modalExceptionInput').value = '';
+    renderSourceExceptionsIntoModal(svcId, sourceName);
+  } else {
+    excSection.style.display = '';
+    excSection.querySelector('label').innerHTML = 'Client Exceptions <span style="font-weight:400; color:var(--muted);">(optional)</span>';
+    excSection.querySelector('.opt-sub').textContent = 'These clients can keep booking through any source on this service even while this restriction is active.';
+    document.getElementById('modalExceptionInput').value = '';
+    renderExceptionChipsInto(svcId, 'modalExceptionsList');
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+  modalCtx = null;
+  render(); // pick up any exceptions added/removed while the modal was open, and reset the master radio if needed
+}
+
+function saveRestriction(){
+  if(!modalCtx) return closeModal();
+  const svc = DATA.find(s=>s.id===modalCtx.svcId);
+  const msg = document.getElementById('custMsg').value.trim();
+  const startDate = document.getElementById('startDate').value;
+  const startTime = document.getElementById('startTime').value;
+  const endDate = document.getElementById('endDate').value;
+  const endTime = document.getElementById('endTime').value;
+
+  if(startDate && startTime && endDate && endTime){
+    const startVal = new Date(`${startDate}T${startTime}`);
+    const endVal = new Date(`${endDate}T${endTime}`);
+    if(endVal <= startVal){
+      alert('End date & time must be later than start.');
+      return;
+    }
+  }
+
+  if(modalCtx.sourceName){
+    if(!svc.restrictedSources.includes(modalCtx.sourceName)){
+      svc.restrictedSources.push(modalCtx.sourceName);
+    }
+    svc.restricted = svc.restrictedSources.length === svc.sources.length;
+  } else {
+    svc.restricted = true;
+    svc.restrictedSources = [...svc.sources];
+  }
+  svc.msg = msg || svc.msg;
+  svc.startDate = startDate; svc.startTime = startTime;
+  svc.endDate = endDate; svc.endTime = endTime;
+  svc.end = fmtDT(endDate, endTime) || svc.end || '25 Sep 2026, 06:00 PM GST';
+  svc.showInPortal = document.getElementById('showInPortal').checked;
+  modalCtx = null;
+  document.getElementById('overlay').classList.remove('open');
+  render();
+}
+
+function renderCutoffClients(type){
+  const svc = getSvc('sched');
+  if(!svc.cutoffs) return;
+  const key = type === 'sdd' ? 'sdd' : 'ndd';
+  const list = Array.isArray(svc.cutoffs[key].unrestrictedClients) ? svc.cutoffs[key].unrestrictedClients : [];
+  const wrap = document.getElementById(key + 'UnrestrictedList');
+  if(!list.length){
+    wrap.innerHTML = '<p class="cutoff-client-empty">No unrestricted clients configured — add one below.</p>';
+    return;
+  }
+  wrap.innerHTML = list.map((client,index) =>
+    `<span class="chip">${escapeHtml(client)}<button onclick="removeCutoffClient('${key}',${index})" title="Remove">&times;</button></span>`
+  ).join('');
+}
+
+function addCutoffClient(type){
+  const svc = getSvc('sched');
+  const key = type === 'sdd' ? 'sdd' : 'ndd';
+  if(!svc.cutoffs[key].unrestrictedClients) svc.cutoffs[key].unrestrictedClients = [];
+  const input = document.getElementById(key + 'UnrestrictedInput');
+  const val = input.value.trim();
+  if(!val) return;
+  if(!svc.cutoffs[key].unrestrictedClients.includes(val)) svc.cutoffs[key].unrestrictedClients.push(val);
+  input.value = '';
+  renderCutoffClients(key);
+}
+
+function removeCutoffClient(type,index){
+  const svc = getSvc('sched');
+  const key = type === 'sdd' ? 'sdd' : 'ndd';
+  if(!svc.cutoffs[key].unrestrictedClients) return;
+  svc.cutoffs[key].unrestrictedClients.splice(index,1);
+  renderCutoffClients(key);
+}
+
+function openCutoffModal(){
+  const svc = getSvc('sched');
+  if(!svc.cutoffs) svc.cutoffs = {
+    sdd:{enabled:true,time:'11:00',unrestrictedClients:[]},
+    ndd:{enabled:true,time:'16:00',unrestrictedClients:[]}
+  };
+  if(!Array.isArray(svc.cutoffs.sdd.unrestrictedClients)) svc.cutoffs.sdd.unrestrictedClients = [];
+  if(!Array.isArray(svc.cutoffs.ndd.unrestrictedClients)) svc.cutoffs.ndd.unrestrictedClients = [];
+
+  document.getElementById('sddEnabled').checked = svc.cutoffs.sdd.enabled !== false;
+  document.getElementById('sddCutoff').value = svc.cutoffs.sdd.time || '11:00';
+  document.getElementById('nddEnabled').checked = svc.cutoffs.ndd.enabled !== false;
+  document.getElementById('nddCutoff').value = svc.cutoffs.ndd.time || '16:00';
+  document.getElementById('sddUnrestrictedInput').value = '';
+  document.getElementById('nddUnrestrictedInput').value = '';
+  renderCutoffClients('sdd');
+  renderCutoffClients('ndd');
+
+  document.getElementById('cutoffOverlay').classList.add('open');
+}
+
+function closeCutoffModal(){
+  document.getElementById('cutoffOverlay').classList.remove('open');
+}
+
+function saveCutoffs(){
+  const svc = getSvc('sched');
+  const sddTime = document.getElementById('sddCutoff').value;
+  const nddTime = document.getElementById('nddCutoff').value;
+
+  if(!sddTime || !nddTime){
+    alert('Please configure a cutoff time for both SDD and NDD.');
+    return;
+  }
+
+  svc.cutoffs = {
+    sdd:{enabled:document.getElementById('sddEnabled').checked,time:sddTime,unrestrictedClients:[...(svc.cutoffs?.sdd?.unrestrictedClients || [])]},
+    ndd:{enabled:document.getElementById('nddEnabled').checked,time:nddTime,unrestrictedClients:[...(svc.cutoffs?.ndd?.unrestrictedClients || [])]}
+  };
+
+  closeCutoffModal();
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
